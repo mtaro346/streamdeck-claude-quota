@@ -18,12 +18,23 @@ Claude Code の 5 時間クォーター使用率を Stream Deck のキーに表�
 
 ---
 
-## エンドユーザー向けインストール
+## インストール（ビルド不要・ダウンロードするだけ）
 
-1. `com.asuka.claude-quota.streamDeckPlugin` を入手（リポジトリのリリース or `npm run pack` 成果物）
-2. ファイルをダブルクリック → Stream Deck アプリのインストールダイアログ → 「Install」
+1. [**Releases ページ**](https://github.com/mtaro346/streamdeck-claude-quota/releases/latest)から `com.asuka.claude-quota.streamDeckPlugin` をダウンロード
+2. ダウンロードしたファイルをダブルクリック → Stream Deck アプリのインストールダイアログ → 「Install」
 3. Stream Deck アプリの右サイドバー → **Claude Quota** カテゴリ → **Claude 5h Quota** を任意のキーにドラッグ
-4. 数秒〜10秒で最初の表示が出る（PTY 経由で `claude` を起動するため初回は時間がかかる）
+4. 10〜15秒ほどで最初の表示が出る（PTY 経由で `claude` を起動するため取得に時間がかかる）
+
+以降は 5 分ごとに自動更新。**キーを押すと即時更新**される。
+
+### アップデート方法
+
+新しいバージョンの `.streamDeckPlugin` をダブルクリックするだけ（上書きインストールされる）。
+
+### うまく表示されないとき
+
+- キーに `ERR` が出る → `claude` CLI にログインしているか確認（ターミナルで `claude` を起動して `/usage` が表示されるか）
+- 表示が止まった/おかしい → Claude Code のアップデートで UI が変わった可能性。[Issues](https://github.com/mtaro346/streamdeck-claude-quota/issues) へ報告を。ログは `~/Library/Application Support/com.elgato.StreamDeck/Plugins/com.asuka.claude-quota.sdPlugin/logs/` で確認できる
 
 ### 動作要件
 
@@ -175,6 +186,13 @@ CC 2.1.x で TUI レンダラーが相対カーソル移動（`ESC[nC`）から*
 2. ANSI 除去時に単語が連結（`Currentsession`）→ 正規表現が不一致
 
 2026-06-04 修正済み（`ESC[nG` → スペース変換、expect 照合の緩和、タイムアウト 35s → 75s）。同種の破損が起きたら上記「テスト」のフローで対処。
+
+## 更新履歴
+
+| バージョン | 日付 | 内容 |
+|---|---|---|
+| v0.4.0 | 2026-06-04 | Claude Code 2.1.x の TUI 描画変更（ESC[nG 絶対列指定）に対応。解析ロジックを `parse.ts` に分離しテスト追加。probe 高速化（~42s → ~13s）・タイムアウト拡大。ハードコードパス除去 |
+| v0.3.0 | 2026-04-28 | 初版（PTY scrape 方式） |
 
 ## 謝辞
 
