@@ -1,0 +1,16 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "customConditions": ["node"],
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "noImplicitOverride": true,
+    "rootDir": "src",
+    "outDir": "com.asuka.claude-quota.sdPlugin/bin",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

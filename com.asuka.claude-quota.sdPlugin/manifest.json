@@ -1,0 +1,50 @@
+{
+  "Name": "Claude Quota",
+  "Version": "0.3.0.0",
+  "Author": "asuka",
+  "Actions": [
+    {
+      "Name": "Claude 5h Quota",
+      "UUID": "com.asuka.claude-quota.5h",
+      "Icon": "imgs/actions/quota/icon",
+      "Tooltip": "Show Claude Code 5-hour quota usage",
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "ui/inspector.html",
+      "States": [
+        {
+          "Image": "imgs/actions/quota/key",
+          "TitleAlignment": "middle",
+          "FontSize": 0,
+          "ShowTitle": false
+        }
+      ],
+      "DisableAutomaticStates": true
+    }
+  ],
+  "Category": "Claude Quota",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "CodePath": "bin/plugin.js",
+  "Description": "Displays Claude Code's 5-hour rate limit usage with a bottom-up fill bar and reset countdown.",
+  "Icon": "imgs/plugin/marketplace",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.5"
+  },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "enabled"
+  },
+  "UUID": "com.asuka.claude-quota"
+}

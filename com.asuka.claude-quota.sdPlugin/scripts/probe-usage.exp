@@ -1,0 +1,63 @@
+#!/usr/bin/env expect -f
+# probe-usage.exp <claude_binary> [<wait_seconds>]
+# Spawns claude in a PTY, sends /usage, captures the rendered panel,
+# dismisses with Esc, then exits. Output (with ANSI escapes) goes to stdout.
+
+set claude_bin [lindex $argv 0]
+if {$claude_bin eq ""} { set claude_bin "claude" }
+
+set wait_secs [lindex $argv 1]
+if {$wait_secs eq ""} { set wait_secs 7 }
+
+set timeout 30
+
+log_user 0
+spawn -noecho $claude_bin
+
+# Wait for Claude to finish initializing — banner and prompt render
+expect {
+    -re "Welcome back" {}
+    -re "│ > " {}
+    -re "❯" {}
+    timeout { exit 2 }
+    eof { exit 3 }
+}
+# Give it another second to settle
+sleep 1
+
+# Open /usage
+send "/usage\r"
+
+# Let the panel render fully (Claude needs a few seconds to fetch data and draw)
+sleep $wait_secs
+
+# Capture from now on
+log_user 1
+
+# Trigger one more redraw by waiting briefly for the cancel hint.
+# CC >= 2.1.x renders words with absolute column moves (ESC[nG) between
+# them ("Esc\x1b\[7Gto\x1b\[10Gcancel"), so match loosely within a line.
+set timeout 5
+expect {
+    -re {Esc[^\r\n]{0,40}cancel} {}
+    timeout {}
+}
+
+# Dismiss the dialog
+send "\033"
+
+# Drain any remaining output and exit cleanly
+set timeout 3
+expect {
+    -re "│ > " {}
+    -re "❯ " {}
+    timeout {}
+}
+
+# Quit Claude
+send "/exit\r"
+set timeout 15
+expect {
+    eof {}
+    timeout {}
+}

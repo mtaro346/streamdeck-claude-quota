@@ -1,0 +1,11 @@
+{
+  "name": "com.asuka.claude-quota",
+  "version": "0.2.0",
+  "description": "Stream Deck plugin showing Claude Code 5h quota usage via PTY probe",
+  "type": "module",
+  "private": true,
+  "main": "bin/plugin.js",
+  "engines": {
+    "node": ">=20.5.1"
+  }
+}

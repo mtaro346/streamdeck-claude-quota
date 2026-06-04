@@ -1,0 +1,100 @@
+────────────────────────────────────────────[39m
+[3G[93m⏵⏵[6Gauto[11Gmode[16Gon[37m (shift+tab[30Gto[33Gcycle)[40G·[42G←[44Gfor[48Gagents[63G●[65Ghigh[70G·[72G/effort[39m
+[2C[3A[?2026l[?2026h[2D[3B[2C[1A[37mOpus 4.8 (1M context)  [2m│[22m /private/tmp[39m              
+[3G[93m⏵⏵[6Gauto[11Gmode[16Gon[37m (shift+tab[30Gto[33Gcycle)[40G·[42G←[44Gfor[48Gagents[39m
+[2C[4A[?2026l[?2026h[2D[4B[5A [93m⚠ 1 setup issue: MCP[37m · /doctor[39m[K[1B[K[2B❯ [7mT[27m[2mry "fix lint errors"[22m[K[1B[37m────────────────────────────────────────────────────────────────────────────────[39m
+[3G[37mOpus[8G4.8[12G(1M[16Gcontext)[26G[2m│[22m /private/tmp[63G●[65Ghigh[70G·[72G/effort[39m
+[3G[93m⏵⏵[6Gauto[11Gmode[16Gon[37m (shift+tab[30Gto[33Gcycle)[40G·[42G←[44Gfor[48Gagents[39m
+[2C[4A[?2026l(B[<u[>1u[>4;2m]9;4;3;[?2026h[2D[4B[5A[100m[37m❯ [97m/usage[39m                                                                        [1B[49m[K[1B[94m────────────────────────────────────────────────────────────────────────────────[2C[1B[1mSettings[22m[39m  Status   Config  [104m[30m[1m Usage [22m[39m[49m  Stats[63G[K[2C[1B[K
+[3G[1mSession[22m
+
+[3G[37mTotal[9Gcost:[26G$0.0000[39m
+[3G[37mTotal[9Gduration[18G(API):[26G0s[39m
+[3G[37mTotal[9Gduration[18G(wall):[26G11s[39m
+[3G[37mTotal[9Gcode[14Gchanges:[26G0[28Glines[34Gadded,[41G0[43Glines[49Gremoved[39m
+[3G[37mUsage:[26G0[28Ginput,[35G0[37Goutput,[45G0[47Gcache[53Gread,[59G0[61Gcache[67Gwrite[39m
+
+[3G[1mCurrent[11Gsession[22m
+[3G[47m[33m█████▌                                            [54G[39m[49m11%[58Gused
+[3G[37mResets[10G7:30pm[17G(Asia/Tokyo)[39m
+
+[3G[1mCurrent[11Gweek[16G(all[21Gmodels)[22m
+[3G[47m[33m█████                                             [54G[39m[49m10%[58Gused
+[3G[37mResets[10GJun[14G11[17Gat[20G10am[25G(Asia/Tokyo)[39m
+
+[3G[1mWhat's[10Gcontributing[23Gto[26Gyour[31Glimits[38Gusage?[22m
+[3G[37mApproximate,[16Gbased[22Gon[25Glocal[31Gsessions[40Gon[43Gthis[48Gmachine[56G—[58Gdoes[63Gnot[67Ginclude[39m
+[3G[37mother[9Gdevices[17Gor[20Gclaude.ai[39m
+
+[3G[37mScanning[12Glocal[18Gsessions…[39m
+
+[3G[37mRefreshing…[39m
+
+[3G[37mEsc[7Gto[10Gcancel[39m
+[30C[27A[?2026l[?2026h[30D[27B[7C[12A[47m[33m▌[55G[39m[49m1[2C[3B[1mCurrent week (Son[21Get [25Gnly)[22m[K[2C[1B[47m[33m                                                  [39m[49m 0% used[K[2C[1B[K[2C[1B[1mWhat's contributing to your limits usage?[2C[1B[22m[37mApproximate, ba[20Gd on local sessions on this machine — does not include [2C[1Bother devices or claude.ai[2C[1B[39m[K[2C[1B[37mScanning local sessions…[2C[1B[39m[K
+[3G[1mUsage[9Gcredits[22m
+[3G[37mUsage[9Gcredits[17Gare[21Goff[25G·[27G/usage-credits[42Gto[45Gturn[50Gthem[55Gon[39m
+
+[3G[37mEsc[7Gto[10Gcancel[39m
+[30C[31A[?2026l[?2026h[30D[31B[2C[6A[37mLast 24h[12G· these are independent characteristics of your usage, not a [2C[1Bbreakdown[2C[1B[39m[K[2C[1B100% of your usage came from subagent-heavy sessions[K[3C[1B[37mEach subagent runs its own requests. Be deliberate about spawning them — and [2C[1B[39m [37mconsider [14Gonfiguring a cheaper model for simpler subagents.[39m
+
+[3G47%[7Gof[10Gyour[15Gusage[21Gwas[25Gat[28G>150k[34Gcontext
+[4G[37mLonger[11Gsessions[20Gare[24Gmore[29Gexpensive[39Geven[44Gwhen[49Gcached.[57G/compact[66Gmid-task,[39m
+[4G[37m/clear[11Gwhen[16Gswitching[26Gto[29Gnew[33Gtasks.[39m
+
+[3G79%[7Gof[10Gyour[15Gusage[21Gcame[26Gfrom[31Gsubagents[41Gunder[47G"superpowers:writing-plans"
+[4G[37mIf[7Gthis[12Gruns[17Gfrequently,[29Gconsider[38Gconfiguring[50Gits[54Gsubagents[64Gwith[69Ga[71Gcheaper[39m
+[4G[37mmodel[10Gor[13Gtightening[24Gtheir[30Gprompts.[39m
+
+[3G80%[7Gof[10Gyour[15Gusage[21Gcame[26Gfrom[31Gplugin[38G"superpowers"
+[4G[37mReview[11Gwhat[16Gthis[21Gplugin[28Gcontributes[40G—[42Gits[46Gagents,[54Gskills,[62Gand[66GMCP[70Gtools[76Gall[39m
+[4G[37mcount[10Gtoward[17Gyour[22Glimit.[39m
+
+[3G13%[7Gof[10Gyour[15Gusage[21Gcame[26Gfrom[31GMCP[35Gserver[42G"voicevox"
+[4G[37mMCP[8Gtool[13Gresults[21Gstay[26Gin[29Gcontext[37Gfor[41Gthe[45Grest[50Gof[53Gthe[57Gsession.[66G/compact[75Gto[39m
+[4G[37mflush[10Gthem,[16Gor[19Gdisable[27Gservers[35Gyou[39Gdon't[45Gneed.[39m
+
+[3GSkills[27G[37m%[29Gof[32Gusage[39m
+[3G[37m/superpowers:writing-plans[35G1%[39m
+
+[3GSubagents[27G[37m%[29Gof[32Gusage[39m
+[3G[37msuperpowers:writing-plans[34G79%[39m
+[3G[37mworkflow-subagent[34G17%[39m
+
+[3GPlugins[27G[37m%[29Gof[32Gusage[39m
+[3G[37msuperpowers[34G80%[39m
+
+[3GMCP[7Gservers[27G[37m%[29Gof[32Gusage[39m
+[3G[37mvoicevox[34G13%[39m
+[3G[37mcontext7[35G6%[39m
+[3G[37mplugin:context7:context7[35G3%[39m
+
+[3G[37md[5Gto[8Gday[12G·[14Gw[16Gto[19Gweek[39m
+
+[3G[1mUsage[9Gcredits[22m
+[3G[37mUsage[9Gcredits[17Gare[21Goff[25G·[27G/usage-credits[42Gto[45Gturn[50Gthem[55Gon[39m
+
+[3G[37mEsc[7Gto[10Gcancel[39m
+[30C[69A[?2026l(B[<u[>1u[>4;2m]9;4;0;[?2026h[30D[69B[H[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[2K[1B[H[91m╭───[6GClaude[13GCode[18G[37mv2.1.162[27G[91m─────────────────────────────────────────────────────╮[39m
+[91m│[54G[2m│[56G[22m[1mTips[61Gfor[65Ggetting[80G[22m│[39m
+[91m│[17G[39m[1mWelcome[25Gback[30GDev![54G[22m[2m[91m│[56G[22m[1mstarted[80G[22m│[39m
+[91m│[54G[2m│[56G[39m[22mRun[60G/init[66Gto[69Gcreate[76Ga[78G…[80G[91m│[39m
+[91m│[25G▐[40m▛███▜[49m▌[54G[2m│[56G[22m───────────────────────[80G│[39m
+[91m│[24G▝▜[40m█████[49m▛▘[54G[2m│[56G[22m[1mWhat's[63Gnew[80G[22m│[39m
+[91m│[26G▘▘[29G▝▝[54G[2m│[56G[39m[22m`claude[64Gagents[71G--json`…[80G[91m│[39m
+[91m│[5G[37mOpus[10G4.8[14G(1M[18Gcontext)[27Gwith[32Ghi…[36G·[38GClaude[45GMax[49G·[54G[2m[91m│[56G[39m[22m`--tools`:[67Gexplicitly[78G…[80G[91m│[39m
+[91m│[5G[37muser@example.com's[27GOrganization[54G[2m[91m│[56G[39m[22m`/effort`[66Gnow[70Gconfirms…[80G[91m│[39m
+[91m│[22G[37m/private/tmp[54G[2m[91m│[56G[22m[37m[3m/release-notes[71Gfor[75Gmore[80G[23m[91m│[39m
+[91m╰──────────────────────────────────────────────────────────────────────────────╯[39m
+
+[2G[93m⚠[4G2[6Gsetup[12Gissues:[20GMCP[37m ·[26G/doctor[39m
+
+[100m[37m❯ [97m/usage[39m [49m
+[37m [3G⎿[6G[39mSettings[15Gdialog[22Gdismissed
+
+[37m────────────────────────────────────────────────────────────────────────────────[39m
+❯ [7m [27m
+[37m────────────────────────────────────────────────────────────────────────────────[39m
+[3G[37mOpus[8G4.8[12G(1M[16Gcontext)[26G[2m│[22m /private/tmp[63G●[65Ghigh[70G·[72G/effort[39m
+[3G[93m⏵⏵[6Gauto[11Gmode[16Gon[37m (shift+tab[30Gto[33Gcycle)[40G·[42G←[44Gfor[48Gagents[39m
+[2C[4A[?2026l[?1006l[?1003l[?1002l[?1000l[2D[4B(B[>4m[<u[?1004l[?2031l[?2004l[?25h7[r8]9;4;0;]0;

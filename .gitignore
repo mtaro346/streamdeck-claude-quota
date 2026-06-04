@@ -1,0 +1,7 @@
+node_modules/
+com.asuka.claude-quota.sdPlugin/node_modules/
+com.asuka.claude-quota.sdPlugin/bin/
+com.asuka.claude-quota.sdPlugin/logs/
+com.asuka.claude-quota.streamDeckPlugin
+*.log
+.DS_Store

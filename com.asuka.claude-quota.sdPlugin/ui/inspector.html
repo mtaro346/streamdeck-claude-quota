@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Claude Quota Settings</title>
+  <script src="vendor/sdpi-components.js"></script>
+</head>
+<body>
+  <sdpi-item label="Font family">
+    <sdpi-textfield setting="fontFamily" default="Helvetica, Arial, sans-serif"></sdpi-textfield>
+  </sdpi-item>
+
+  <details open>
+    <summary>Percent</summary>
+    <sdpi-item label="Font size">
+      <sdpi-range setting="percentFontSize" min="10" max="60" default="28" showlabels></sdpi-range>
+    </sdpi-item>
+    <sdpi-item label="Font weight">
+      <sdpi-select setting="percentFontWeight" default="800">
+        <option value="400">Normal (400)</option>
+        <option value="600">Semibold (600)</option>
+        <option value="700">Bold (700)</option>
+        <option value="800">Extra Bold (800)</option>
+        <option value="900">Black (900)</option>
+      </sdpi-select>
+    </sdpi-item>
+    <sdpi-item label="X (0-144)">
+      <sdpi-range setting="percentX" min="0" max="144" default="72" showlabels></sdpi-range>
+    </sdpi-item>
+    <sdpi-item label="Y (0-144)">
+      <sdpi-range setting="percentY" min="0" max="144" default="32" showlabels></sdpi-range>
+    </sdpi-item>
+    <sdpi-item label="Color">
+      <sdpi-color setting="percentColor" default="#ffffff"></sdpi-color>
+    </sdpi-item>
+  </details>
+
+  <details open>
+    <summary>Countdown</summary>
+    <sdpi-item label="Font size">
+      <sdpi-range setting="countdownFontSize" min="8" max="40" default="16" showlabels></sdpi-range>
+    </sdpi-item>
+    <sdpi-item label="Font weight">
+      <sdpi-select setting="countdownFontWeight" default="700">
+        <option value="400">Normal (400)</option>
+        <option value="600">Semibold (600)</option>
+        <option value="700">Bold (700)</option>
+        <option value="800">Extra Bold (800)</option>
+        <option value="900">Black (900)</option>
+      </sdpi-select>
+    </sdpi-item>
+    <sdpi-item label="X (0-144)">
+      <sdpi-range setting="countdownX" min="0" max="144" default="72" showlabels></sdpi-range>
+    </sdpi-item>
+    <sdpi-item label="Y (0-144)">
+      <sdpi-range setting="countdownY" min="0" max="144" default="132" showlabels></sdpi-range>
+    </sdpi-item>
+    <sdpi-item label="Color">
+      <sdpi-color setting="countdownColor" default="#ffffff"></sdpi-color>
+    </sdpi-item>
+  </details>
+
+  <details>
+    <summary>Colors</summary>
+    <sdpi-item label="Bar color">
+      <sdpi-color setting="barColor" default="#d97757"></sdpi-color>
+    </sdpi-item>
+    <sdpi-item label="Background color">
+      <sdpi-color setting="bgColor" default="#0d0d0d"></sdpi-color>
+    </sdpi-item>
+  </details>
+
+  <details>
+    <summary>Icon</summary>
+    <sdpi-item label="Size (% of canvas)">
+      <sdpi-range setting="iconSizePercent" min="20" max="100" default="69" showlabels></sdpi-range>
+    </sdpi-item>
+  </details>
+
+  <details>
+    <summary>Polling</summary>
+    <sdpi-item label="Refresh interval (sec)">
+      <sdpi-range setting="pollSeconds" min="60" max="1800" step="30" default="300" showlabels></sdpi-range>
+    </sdpi-item>
+  </details>
+
+  <details>
+    <summary>Reset</summary>
+    <sdpi-item label="">
+      <sdpi-button id="resetBtn">Reset to defaults</sdpi-button>
+    </sdpi-item>
+  </details>
+
+  <script>
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      // sdpi-components keeps a reference to the underlying connection;
+      // we set settings to {} which makes all defaults apply.
+      const connection = window["streamDeckClient"] ?? window["SDPIComponents"]?.streamDeckClient;
+      if (connection?.setSettings) {
+        connection.setSettings({});
+      } else {
+        // fallback: reload the inspector
+        location.reload();
+      }
+    });
+  </script>
+
+  <style>
+    details { margin: 6px 0; }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
+      color: var(--sdpi-color, #fff);
+      opacity: 0.85;
+    }
+    summary:hover { opacity: 1; }
+  </style>
+</body>
+</html>

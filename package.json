@@ -1,0 +1,30 @@
+{
+  "name": "streamdeck-claude-quota-dev",
+  "version": "0.1.0",
+  "description": "Build tools for streamdeck-claude-quota plugin",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.asuka.claude-quota\"",
+    "install:plugin": "cd com.asuka.claude-quota.sdPlugin && npm install --omit=optional --no-audit --no-fund",
+    "install:all": "npm install && npm run install:plugin",
+    "pack": "streamdeck pack com.asuka.claude-quota.sdPlugin --force",
+    "validate": "streamdeck validate com.asuka.claude-quota.sdPlugin",
+    "link": "streamdeck link com.asuka.claude-quota.sdPlugin",
+    "restart": "streamdeck restart com.asuka.claude-quota"
+  },
+  "devDependencies": {
+    "@elgato/cli": "^1.7.4",
+    "@elgato/streamdeck": "^2.1.0",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.1.0",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^22.0.0",
+    "rollup": "^4.21.0",
+    "tslib": "^2.7.0",
+    "typescript": "^5.5.0"
+  }
+}
