@@ -1,11 +1,16 @@
 {
   "name": "streamdeck-claude-quota-dev",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Build tools for streamdeck-claude-quota plugin",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22.6.0"
+  },
   "scripts": {
     "build": "rollup -c",
+    "test": "node --test --experimental-strip-types --import ./scripts/register-ts.mjs tests/*.test.ts",
+    "preview": "node --experimental-strip-types --import ./scripts/register-ts.mjs scripts/preview-all.mjs",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.asuka.claude-quota\"",
     "install:plugin": "cd com.asuka.claude-quota.sdPlugin && npm install --omit=optional --no-audit --no-fund",
     "install:all": "npm install && npm run install:plugin",

@@ -1,13 +1,13 @@
 {
   "Name": "Claude Quota",
-  "Version": "0.4.0.0",
+  "Version": "0.5.0.0",
   "Author": "asuka",
   "Actions": [
     {
-      "Name": "Claude 5h Quota",
+      "Name": "Claude Quota",
       "UUID": "com.asuka.claude-quota.5h",
       "Icon": "imgs/actions/quota/icon",
-      "Tooltip": "Show Claude Code 5-hour quota usage",
+      "Tooltip": "Show Claude Code 5-hour, weekly, and per-model quota usage",
       "Controllers": [
         "Keypad"
       ],
@@ -26,7 +26,7 @@
   "Category": "Claude Quota",
   "CategoryIcon": "imgs/plugin/category-icon",
   "CodePath": "bin/plugin.js",
-  "Description": "Displays Claude Code's 5-hour rate limit usage with a bottom-up fill bar and reset countdown.",
+  "Description": "Displays Claude Code's 5-hour, weekly, and per-model (Fable) rate limit usage as stacked progress bars with reset countdowns.",
   "Icon": "imgs/plugin/marketplace",
   "SDKVersion": 2,
   "Software": {
@@ -36,10 +36,6 @@
     {
       "Platform": "mac",
       "MinimumVersion": "12"
-    },
-    {
-      "Platform": "windows",
-      "MinimumVersion": "10"
     }
   ],
   "Nodejs": {

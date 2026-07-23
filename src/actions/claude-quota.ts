@@ -15,6 +15,16 @@ import { buildErrorSvg, buildLoadingSvg, buildSvg, type RenderInput } from "../s
 const SPINNER_FRAME_MS = 90;
 const SPINNER_STEP_DEG = 18;
 
+// Multiple keys (one per profile/device) each run their own poll timer. A
+// snapshot fetched by one key moments ago is reused by the others so the
+// rate-limited usage endpoint sees one request per interval, not one per key.
+const SNAPSHOT_FRESH_MS = 45_000;
+
+// Only the usage API provides the Fable window; when a poll falls back to the
+// TUI probe the bar would flicker to "—". Carry the last API-sourced values
+// for a bounded time instead — the weekly window moves slowly.
+const FABLE_CARRY_MS = 15 * 60_000;
+
 @action({ UUID: "com.asuka.claude-quota.5h" })
 export class ClaudeQuotaAction extends SingletonAction<Settings> {
 	private pollTimers = new Map<string, NodeJS.Timeout>();
@@ -24,6 +34,7 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 	private settings = new Map<string, Settings>();
 	private lastSnapshot: Snapshot | null = null;
 	private lastUpdatedAt: number | null = null;
+	private lastFable: { percent: number; resetMinutes: number | null; label: string | null; at: number } | null = null;
 
 	override async onWillAppear(ev: WillAppearEvent<Settings>): Promise<void> {
 		this.settings.set(ev.action.id, ev.payload.settings ?? {});
@@ -40,7 +51,7 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 	override async onKeyDown(ev: KeyDownEvent<Settings>): Promise<void> {
 		streamDeck.logger.info("manual refresh requested");
 		this.settings.set(ev.action.id, ev.payload.settings ?? {});
-		await this.update(ev.action);
+		await this.update(ev.action, { force: true });
 	}
 
 	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<Settings>): Promise<void> {
@@ -73,21 +84,31 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 		}
 	}
 
-	private async update(action: WillAppearEvent["action"]): Promise<void> {
+	private async update(action: WillAppearEvent["action"], opts: { force?: boolean } = {}): Promise<void> {
 		if (this.inFlight.has(action.id)) {
 			streamDeck.logger.debug("update skipped — probe already in flight");
+			return;
+		}
+		if (
+			!opts.force &&
+			this.lastSnapshot &&
+			this.lastUpdatedAt !== null &&
+			Date.now() - this.lastUpdatedAt < SNAPSHOT_FRESH_MS
+		) {
+			streamDeck.logger.debug("update reused fresh snapshot from another key");
+			await this.render(action, this.lastSnapshot);
 			return;
 		}
 		this.inFlight.add(action.id);
 		this.startSpinner(action);
 		try {
-			const snapshot = await probe();
+			const snapshot = this.carryFable(await probe());
 			this.lastSnapshot = snapshot;
 			this.lastUpdatedAt = Date.now();
 			this.stopSpinner(action.id);
 			await this.render(action, snapshot);
 			streamDeck.logger.info(
-				`updated: 5h=${snapshot.sessionPercent}% reset=${formatCountdown(snapshot.sessionResetMinutes)} 7d=${snapshot.weeklyPercent}%`,
+				`updated: 5h=${snapshot.sessionPercent}% reset=${formatCountdown(snapshot.sessionResetMinutes)} 7d=${snapshot.weeklyPercent}% fable=${snapshot.fablePercent ?? "—"}%`,
 			);
 		} catch (err) {
 			this.stopSpinner(action.id);
@@ -127,6 +148,34 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 		}
 	}
 
+	private carryFable(snapshot: Snapshot): Snapshot {
+		if (snapshot.fablePercent !== null) {
+			this.lastFable = {
+				percent: snapshot.fablePercent,
+				resetMinutes: snapshot.fableResetMinutes,
+				label: snapshot.fableLabel,
+				at: Date.now(),
+			};
+			return snapshot;
+		}
+		// An API-sourced null is authoritative — the scoped limit is gone
+		// (plan change etc.), so stop carrying instead of showing stale data.
+		if (snapshot.source === "api") {
+			this.lastFable = null;
+			return snapshot;
+		}
+		const carried = this.lastFable;
+		if (!carried || Date.now() - carried.at >= FABLE_CARRY_MS) return snapshot;
+		const elapsedMinutes = Math.round((Date.now() - carried.at) / 60000);
+		return {
+			...snapshot,
+			fablePercent: carried.percent,
+			fableResetMinutes:
+				carried.resetMinutes === null ? null : Math.max(0, carried.resetMinutes - elapsedMinutes),
+			fableLabel: carried.label,
+		};
+	}
+
 	private async render(action: WillAppearEvent["action"], snapshot: Snapshot): Promise<void> {
 		const input = this.snapshotToRenderInput(action.id, snapshot);
 		await action.setImage(buildSvg(input ?? this.emptyRenderInput(action.id)));
@@ -139,8 +188,18 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 	private snapshotToRenderInput(actionId: string, snapshot: Snapshot | null): RenderInput | null {
 		if (!snapshot || snapshot.sessionPercent === null) return null;
 		return {
-			percent: snapshot.sessionPercent,
-			countdown: formatCountdown(snapshot.sessionResetMinutes),
+			session: {
+				percent: snapshot.sessionPercent,
+				countdown: formatCountdown(snapshot.sessionResetMinutes),
+			},
+			weekly: {
+				percent: snapshot.weeklyPercent,
+				countdown: formatCountdown(snapshot.weeklyResetMinutes),
+			},
+			fable: {
+				percent: snapshot.fablePercent,
+				countdown: formatCountdown(snapshot.fableResetMinutes),
+			},
 			isActive: true,
 			settings: this.settings.get(actionId),
 		};
@@ -148,8 +207,9 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 
 	private emptyRenderInput(actionId: string): RenderInput {
 		return {
-			percent: 0,
-			countdown: "—",
+			session: { percent: null, countdown: "—" },
+			weekly: { percent: null, countdown: "—" },
+			fable: { percent: null, countdown: "—" },
 			isActive: false,
 			settings: this.settings.get(actionId),
 		};

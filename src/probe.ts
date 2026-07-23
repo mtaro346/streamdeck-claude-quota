@@ -7,9 +7,11 @@ import { existsSync } from "node:fs";
 
 import streamDeck from "@elgato/streamdeck";
 
-import { parseUsageOutput, type Snapshot } from "./parse.js";
+import { isCompleteSnapshot, parseUsageOutput, pickUsableSnapshot, type Snapshot } from "./parse.js";
+import { fetchUsageSnapshot } from "./usage-api.js";
 
 export type { Snapshot } from "./parse.js";
+export { formatCountdown } from "./format.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -54,13 +56,21 @@ async function probeOnce(claudeBin: string, waitSeconds: number): Promise<Snapsh
 	return parseUsageOutput(raw);
 }
 
-// A torn frame can yield a percent without its reset time; treat that as
-// incomplete so the retry can capture a settled frame instead.
-function isCompleteSnapshot(snapshot: Snapshot): boolean {
-	return snapshot.sessionPercent !== null && snapshot.sessionResetMinutes !== null;
-}
-
 export async function probe(): Promise<Snapshot> {
+	// The usage API is faster and steadier than driving the TUI, and it is the
+	// only source for the model-scoped (Fable) weekly bar. The TUI probe stays
+	// as a fallback; running it also makes the CLI refresh the OAuth token that
+	// the API path depends on.
+	try {
+		const snapshot = await fetchUsageSnapshot();
+		streamDeck.logger.debug("probe: usage API snapshot ok");
+		return snapshot;
+	} catch (err) {
+		streamDeck.logger.warn(
+			`usage API failed (${err instanceof Error ? err.message : String(err)}); falling back to TUI probe`,
+		);
+	}
+
 	const claudeBin = await resolveClaudeBinary();
 
 	const first = await probeOnce(claudeBin, PROBE_WAIT_SECONDS);
@@ -69,14 +79,27 @@ export async function probe(): Promise<Snapshot> {
 	streamDeck.logger.warn(
 		`probe parse incomplete on first attempt; retrying with longer wait. preview=${first.rawTextPreview.slice(0, 200).replace(/\n/g, " ")}`,
 	);
-	const second = await probeOnce(claudeBin, RETRY_WAIT_SECONDS);
-	if (isCompleteSnapshot(second)) return second;
-	// Degraded but usable: percent without reset time beats an error tile.
-	if (second.sessionPercent !== null) return second;
+
+	// The retry can time out or throw; never let that discard a usable first
+	// frame. Fall back to the best snapshot we have — preferring a complete one,
+	// then one that at least has a weekly window, then any with a session percent.
+	let second: Snapshot | null = null;
+	try {
+		second = await probeOnce(claudeBin, RETRY_WAIT_SECONDS);
+		if (isCompleteSnapshot(second)) return second;
+	} catch (err) {
+		streamDeck.logger.warn(`probe retry failed: ${err instanceof Error ? err.message : String(err)}`);
+	}
+
+	// Degraded but usable: prefer a snapshot that also has the weekly window,
+	// otherwise the freshest session percent; a missing window renders as an
+	// em dash rather than a fake 0%.
+	const best = pickUsableSnapshot(first, second);
+	if (best) return best;
 
 	throw new ProbeParseError(
 		"could not extract usage from claude /usage output",
-		second.rawTextPreview,
+		(second ?? first).rawTextPreview,
 	);
 }
 
@@ -128,12 +151,4 @@ function runExpect(claudeBin: string, waitSeconds: number, timeoutMs: number): P
 			}
 		});
 	});
-}
-
-export function formatCountdown(minutes: number | null): string {
-	if (minutes === null) return "—";
-	if (minutes <= 0) return "0m";
-	const h = Math.floor(minutes / 60);
-	const m = minutes % 60;
-	return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }

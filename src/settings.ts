@@ -1,55 +1,63 @@
 export type Settings = {
 	fontFamily?: string;
-	percentFontSize?: number | string;
-	percentFontWeight?: number | string;
-	percentX?: number | string;
-	percentY?: number | string;
-	percentColor?: string;
-	countdownFontSize?: number | string;
-	countdownFontWeight?: number | string;
-	countdownX?: number | string;
-	countdownY?: number | string;
-	countdownColor?: string;
-	barColor?: string;
 	bgColor?: string;
-	iconSizePercent?: number | string;
+	trackColor?: string;
+	sessionColor?: string;
+	weeklyColor?: string;
+	fableColor?: string;
+	sessionLabelColor?: string;
+	weeklyLabelColor?: string;
+	fableLabelColor?: string;
+	/** @deprecated single title color, superseded by the per-row label colors. */
+	labelColor?: string;
+	percentColor?: string;
+	resetColor?: string;
+	watermarkColor?: string;
+	watermarkOpacity?: number | string;
 	pollSeconds?: number | string;
+	/** @deprecated v0.4.x keys. Kept only as fallbacks so upgrading users don't silently lose their color customizations. */
+	barColor?: string;
+	/** @deprecated v0.4.x key, superseded by resetColor. */
+	countdownColor?: string;
 };
 
 export type ResolvedSettings = {
 	fontFamily: string;
-	percentFontSize: number;
-	percentFontWeight: number;
-	percentX: number;
-	percentY: number;
-	percentColor: string;
-	countdownFontSize: number;
-	countdownFontWeight: number;
-	countdownX: number;
-	countdownY: number;
-	countdownColor: string;
-	barColor: string;
 	bgColor: string;
-	iconSizePercent: number;
+	trackColor: string;
+	sessionColor: string;
+	weeklyColor: string;
+	fableColor: string;
+	sessionLabelColor: string;
+	weeklyLabelColor: string;
+	fableLabelColor: string;
+	percentColor: string;
+	resetColor: string;
+	watermarkColor: string;
+	watermarkOpacity: number;
 	pollSeconds: number;
 };
 
 export const DEFAULTS: ResolvedSettings = {
 	fontFamily: "Helvetica, Arial, sans-serif",
-	percentFontSize: 28,
-	percentFontWeight: 800,
-	percentX: 72,
-	percentY: 32,
-	percentColor: "#ffffff",
-	countdownFontSize: 16,
-	countdownFontWeight: 700,
-	countdownX: 72,
-	countdownY: 132,
-	countdownColor: "#ffffff",
-	barColor: "#d97757",
 	bgColor: "#0d0d0d",
-	iconSizePercent: 69,
-	pollSeconds: 300,
+	trackColor: "#2a2622",
+	sessionColor: "#d97757",
+	weeklyColor: "#e0a34e",
+	fableColor: "#a78bfa",
+	// Pale tints of each bar color — distinct from the white percent and
+	// readable on both the dark track and the colored fill.
+	sessionLabelColor: "#ffc9a8",
+	weeklyLabelColor: "#ffdf9e",
+	fableLabelColor: "#d9c8ff",
+	percentColor: "#ffffff",
+	// White (slightly dimmed at render time) — the countdown now sits on top of
+	// the colored fills, where the old warm gray sank into the amber bar.
+	resetColor: "#ffffff",
+	watermarkColor: "#ffffff",
+	// Strong enough to ghost through the translucent bars.
+	watermarkOpacity: 0.15,
+	pollSeconds: 60,
 };
 
 function num(value: unknown, fallback: number): number {
@@ -70,19 +78,19 @@ export function resolveSettings(input: Settings | undefined | null): ResolvedSet
 	const s = input ?? {};
 	return {
 		fontFamily: str(s.fontFamily, DEFAULTS.fontFamily),
-		percentFontSize: num(s.percentFontSize, DEFAULTS.percentFontSize),
-		percentFontWeight: num(s.percentFontWeight, DEFAULTS.percentFontWeight),
-		percentX: num(s.percentX, DEFAULTS.percentX),
-		percentY: num(s.percentY, DEFAULTS.percentY),
-		percentColor: str(s.percentColor, DEFAULTS.percentColor),
-		countdownFontSize: num(s.countdownFontSize, DEFAULTS.countdownFontSize),
-		countdownFontWeight: num(s.countdownFontWeight, DEFAULTS.countdownFontWeight),
-		countdownX: num(s.countdownX, DEFAULTS.countdownX),
-		countdownY: num(s.countdownY, DEFAULTS.countdownY),
-		countdownColor: str(s.countdownColor, DEFAULTS.countdownColor),
-		barColor: str(s.barColor, DEFAULTS.barColor),
 		bgColor: str(s.bgColor, DEFAULTS.bgColor),
-		iconSizePercent: num(s.iconSizePercent, DEFAULTS.iconSizePercent),
+		trackColor: str(s.trackColor, DEFAULTS.trackColor),
+		// sessionColor falls back to the deprecated v0.4.x barColor so existing customizations survive upgrade.
+		sessionColor: str(s.sessionColor, str(s.barColor, DEFAULTS.sessionColor)),
+		weeklyColor: str(s.weeklyColor, DEFAULTS.weeklyColor),
+		fableColor: str(s.fableColor, DEFAULTS.fableColor),
+		sessionLabelColor: str(s.sessionLabelColor, DEFAULTS.sessionLabelColor),
+		weeklyLabelColor: str(s.weeklyLabelColor, DEFAULTS.weeklyLabelColor),
+		fableLabelColor: str(s.fableLabelColor, DEFAULTS.fableLabelColor),
+		percentColor: str(s.percentColor, DEFAULTS.percentColor),
+		resetColor: str(s.resetColor, str(s.countdownColor, DEFAULTS.resetColor)),
+		watermarkColor: str(s.watermarkColor, DEFAULTS.watermarkColor),
+		watermarkOpacity: num(s.watermarkOpacity, DEFAULTS.watermarkOpacity),
 		pollSeconds: num(s.pollSeconds, DEFAULTS.pollSeconds),
 	};
 }

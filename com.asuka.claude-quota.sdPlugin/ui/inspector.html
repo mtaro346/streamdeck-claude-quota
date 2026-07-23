@@ -11,59 +11,18 @@
   </sdpi-item>
 
   <details open>
-    <summary>Percent</summary>
-    <sdpi-item label="Font size">
-      <sdpi-range setting="percentFontSize" min="10" max="60" default="28" showlabels></sdpi-range>
+    <summary>Bars</summary>
+    <sdpi-item label="5H bar color">
+      <sdpi-color setting="sessionColor" default="#d97757"></sdpi-color>
     </sdpi-item>
-    <sdpi-item label="Font weight">
-      <sdpi-select setting="percentFontWeight" default="800">
-        <option value="400">Normal (400)</option>
-        <option value="600">Semibold (600)</option>
-        <option value="700">Bold (700)</option>
-        <option value="800">Extra Bold (800)</option>
-        <option value="900">Black (900)</option>
-      </sdpi-select>
+    <sdpi-item label="7D bar color">
+      <sdpi-color setting="weeklyColor" default="#e0a34e"></sdpi-color>
     </sdpi-item>
-    <sdpi-item label="X (0-144)">
-      <sdpi-range setting="percentX" min="0" max="144" default="72" showlabels></sdpi-range>
+    <sdpi-item label="Fable bar color">
+      <sdpi-color setting="fableColor" default="#a78bfa"></sdpi-color>
     </sdpi-item>
-    <sdpi-item label="Y (0-144)">
-      <sdpi-range setting="percentY" min="0" max="144" default="32" showlabels></sdpi-range>
-    </sdpi-item>
-    <sdpi-item label="Color">
-      <sdpi-color setting="percentColor" default="#ffffff"></sdpi-color>
-    </sdpi-item>
-  </details>
-
-  <details open>
-    <summary>Countdown</summary>
-    <sdpi-item label="Font size">
-      <sdpi-range setting="countdownFontSize" min="8" max="40" default="16" showlabels></sdpi-range>
-    </sdpi-item>
-    <sdpi-item label="Font weight">
-      <sdpi-select setting="countdownFontWeight" default="700">
-        <option value="400">Normal (400)</option>
-        <option value="600">Semibold (600)</option>
-        <option value="700">Bold (700)</option>
-        <option value="800">Extra Bold (800)</option>
-        <option value="900">Black (900)</option>
-      </sdpi-select>
-    </sdpi-item>
-    <sdpi-item label="X (0-144)">
-      <sdpi-range setting="countdownX" min="0" max="144" default="72" showlabels></sdpi-range>
-    </sdpi-item>
-    <sdpi-item label="Y (0-144)">
-      <sdpi-range setting="countdownY" min="0" max="144" default="132" showlabels></sdpi-range>
-    </sdpi-item>
-    <sdpi-item label="Color">
-      <sdpi-color setting="countdownColor" default="#ffffff"></sdpi-color>
-    </sdpi-item>
-  </details>
-
-  <details>
-    <summary>Colors</summary>
-    <sdpi-item label="Bar color">
-      <sdpi-color setting="barColor" default="#d97757"></sdpi-color>
+    <sdpi-item label="Track color">
+      <sdpi-color setting="trackColor" default="#2a2622"></sdpi-color>
     </sdpi-item>
     <sdpi-item label="Background color">
       <sdpi-color setting="bgColor" default="#0d0d0d"></sdpi-color>
@@ -71,16 +30,38 @@
   </details>
 
   <details>
-    <summary>Icon</summary>
-    <sdpi-item label="Size (% of canvas)">
-      <sdpi-range setting="iconSizePercent" min="20" max="100" default="69" showlabels></sdpi-range>
+    <summary>Text</summary>
+    <sdpi-item label="5H title color">
+      <sdpi-color setting="sessionLabelColor" default="#ffc9a8"></sdpi-color>
+    </sdpi-item>
+    <sdpi-item label="7D title color">
+      <sdpi-color setting="weeklyLabelColor" default="#ffdf9e"></sdpi-color>
+    </sdpi-item>
+    <sdpi-item label="F title color">
+      <sdpi-color setting="fableLabelColor" default="#d9c8ff"></sdpi-color>
+    </sdpi-item>
+    <sdpi-item label="Percent color">
+      <sdpi-color setting="percentColor" default="#ffffff"></sdpi-color>
+    </sdpi-item>
+    <sdpi-item label="Reset text color">
+      <sdpi-color setting="resetColor" default="#ffffff"></sdpi-color>
     </sdpi-item>
   </details>
 
   <details>
+    <summary>Watermark</summary>
+    <sdpi-item label="Color">
+      <sdpi-color setting="watermarkColor" default="#ffffff"></sdpi-color>
+    </sdpi-item>
+    <sdpi-item label="Opacity">
+      <sdpi-range setting="watermarkOpacity" min="0" max="0.4" step="0.01" default="0.15" showlabels></sdpi-range>
+    </sdpi-item>
+  </details>
+
+  <details open>
     <summary>Polling</summary>
     <sdpi-item label="Refresh interval (sec)">
-      <sdpi-range setting="pollSeconds" min="60" max="1800" step="30" default="300" showlabels></sdpi-range>
+      <sdpi-range setting="pollSeconds" min="60" max="1800" step="30" default="60" showlabels></sdpi-range>
     </sdpi-item>
   </details>
 

@@ -8,6 +8,15 @@ export type Snapshot = {
 	weeklyPercent: number | null;
 	weeklyResetText: string | null;
 	weeklyResetMinutes: number | null;
+	// Model-scoped weekly window (e.g. the dedicated Fable bar on Max plans).
+	// Only the usage API provides these; the TUI fallback leaves them null.
+	fablePercent: number | null;
+	fableResetMinutes: number | null;
+	fableLabel: string | null;
+	// Which prober produced this snapshot. An API-sourced null fable is
+	// authoritative ("no scoped limit"); a TUI-sourced null just means the
+	// source can't see it — the action carries the last API value briefly.
+	source: "api" | "tui";
 	rawTextPreview: string;
 };
 
@@ -120,6 +129,33 @@ export function parseUsageOutput(raw: string, now: Date = new Date()): Snapshot 
 		weeklyPercent: weekly.percent,
 		weeklyResetText: weekly.resetText,
 		weeklyResetMinutes: weekly.resetMinutes,
+		fablePercent: null,
+		fableResetMinutes: null,
+		fableLabel: null,
+		source: "tui",
 		rawTextPreview: cleaned.slice(0, PREVIEW_LENGTH),
 	};
+}
+
+// A torn frame can yield a percent without its reset time, or the session
+// block before the weekly block has rendered; both count as incomplete so the
+// probe can retry for a settled frame with every window populated.
+export function isCompleteSnapshot(snapshot: Snapshot): boolean {
+	return (
+		snapshot.sessionPercent !== null &&
+		snapshot.sessionResetMinutes !== null &&
+		snapshot.weeklyPercent !== null &&
+		snapshot.weeklyResetMinutes !== null
+	);
+}
+
+
+// Chooses the best snapshot to display when neither attempt was fully complete.
+// Prefers the freshest attempt that has a session percent, favoring one that
+// also captured the weekly window. Returns null only when neither has a session.
+export function pickUsableSnapshot(first: Snapshot | null, second: Snapshot | null): Snapshot | null {
+	const usable = [second, first].filter(
+		(s): s is Snapshot => s !== null && s.sessionPercent !== null,
+	);
+	return usable.find((s) => s.weeklyPercent !== null) ?? usable[0] ?? null;
 }

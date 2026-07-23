@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { cleanAnsi, parseUsageOutput } from "../src/parse.ts";
+import { cleanAnsi, isCompleteSnapshot, parseUsageOutput, pickUsableSnapshot } from "../src/parse.ts";
 
 // Real `claude /usage` capture from Claude Code 2.1.162 (2026-06-04).
 // CC >= 2.1.x renders text with absolute column moves (ESC[<n>G) instead of
@@ -67,4 +67,48 @@ test("parseUsageOutput returns nulls when usage panel is absent", () => {
 	// Assert
 	assert.equal(snapshot.sessionPercent, null);
 	assert.equal(snapshot.weeklyPercent, null);
+});
+
+const FULL_SNAPSHOT = {
+	sessionPercent: 50,
+	sessionResetText: "7:30pm",
+	sessionResetMinutes: 120,
+	weeklyPercent: 68,
+	weeklyResetText: "Jul 28",
+	weeklyResetMinutes: 5000,
+	rawTextPreview: "",
+};
+
+test("isCompleteSnapshot is true only when session and weekly are fully populated", () => {
+	assert.equal(isCompleteSnapshot(FULL_SNAPSHOT), true);
+});
+
+test("isCompleteSnapshot is false when the weekly window is missing", () => {
+	assert.equal(isCompleteSnapshot({ ...FULL_SNAPSHOT, weeklyPercent: null }), false);
+	assert.equal(isCompleteSnapshot({ ...FULL_SNAPSHOT, weeklyResetMinutes: null }), false);
+});
+
+test("isCompleteSnapshot is false when a session field is missing", () => {
+	assert.equal(isCompleteSnapshot({ ...FULL_SNAPSHOT, sessionResetMinutes: null }), false);
+});
+
+test("pickUsableSnapshot prefers the attempt that also has weekly data", () => {
+	const sessionOnly = { ...FULL_SNAPSHOT, weeklyPercent: null, weeklyResetMinutes: null };
+	assert.equal(pickUsableSnapshot(FULL_SNAPSHOT, sessionOnly), FULL_SNAPSHOT);
+});
+
+test("pickUsableSnapshot keeps the first frame when the retry is unusable (null)", () => {
+	const sessionOnly = { ...FULL_SNAPSHOT, weeklyPercent: null, weeklyResetMinutes: null };
+	assert.equal(pickUsableSnapshot(sessionOnly, null), sessionOnly);
+});
+
+test("pickUsableSnapshot returns the fresher (second) frame when both lack weekly", () => {
+	const firstS = { ...FULL_SNAPSHOT, sessionPercent: 10, weeklyPercent: null, weeklyResetMinutes: null };
+	const secondS = { ...FULL_SNAPSHOT, sessionPercent: 20, weeklyPercent: null, weeklyResetMinutes: null };
+	assert.equal(pickUsableSnapshot(firstS, secondS), secondS);
+});
+
+test("pickUsableSnapshot returns null when neither frame has a session percent", () => {
+	const empty = { ...FULL_SNAPSHOT, sessionPercent: null };
+	assert.equal(pickUsableSnapshot(empty, null), null);
 });
