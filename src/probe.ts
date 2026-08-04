@@ -7,8 +7,9 @@ import { existsSync } from "node:fs";
 
 import streamDeck from "@elgato/streamdeck";
 
+import { RateLimitGate } from "./backoff.js";
 import { isCompleteSnapshot, parseUsageOutput, pickUsableSnapshot, type Snapshot } from "./parse.js";
-import { fetchUsageSnapshot } from "./usage-api.js";
+import { fetchUsageSnapshot, UsageApiRateLimitError } from "./usage-api.js";
 
 export type { Snapshot } from "./parse.js";
 export { formatCountdown } from "./format.js";
@@ -51,23 +52,68 @@ export class ProbeParseError extends Error {
 	}
 }
 
+// Raised instead of probing while the usage endpoint is rate limited. Callers
+// keep showing their last snapshot; the pause is expected, not a failure.
+export class UsageApiPausedError extends Error {
+	constructor(public readonly remainingMs: number) {
+		super(`usage API paused for ${Math.ceil(remainingMs / 60_000)}m after a rate limit`);
+		this.name = "UsageApiPausedError";
+	}
+}
+
+const rateLimitGate = new RateLimitGate();
+
+export type ProbeOptions = {
+	/** Nothing has ever rendered on this key, so take whatever data we can get. */
+	coldStart?: boolean;
+};
+
 async function probeOnce(claudeBin: string, waitSeconds: number): Promise<Snapshot> {
 	const raw = await runExpect(claudeBin, waitSeconds, PROBE_TIMEOUT_MS);
 	return parseUsageOutput(raw);
 }
 
-export async function probe(): Promise<Snapshot> {
+export async function probe(opts: ProbeOptions = {}): Promise<Snapshot> {
 	// The usage API is faster and steadier than driving the TUI, and it is the
 	// only source for the model-scoped (Fable) weekly bar. The TUI probe stays
 	// as a fallback; running it also makes the CLI refresh the OAuth token that
 	// the API path depends on.
-	try {
-		const snapshot = await fetchUsageSnapshot();
-		streamDeck.logger.debug("probe: usage API snapshot ok");
-		return snapshot;
-	} catch (err) {
-		streamDeck.logger.warn(
-			`usage API failed (${err instanceof Error ? err.message : String(err)}); falling back to TUI probe`,
+	if (rateLimitGate.isOpen()) {
+		try {
+			const snapshot = await fetchUsageSnapshot();
+			rateLimitGate.open();
+			streamDeck.logger.debug("probe: usage API snapshot ok");
+			return snapshot;
+		} catch (err) {
+			if (err instanceof UsageApiRateLimitError) {
+				rateLimitGate.close(err.retryAfterMs);
+			} else {
+				streamDeck.logger.warn(
+					`usage API failed (${err instanceof Error ? err.message : String(err)}); falling back to TUI probe`,
+				);
+			}
+		}
+	}
+
+	// A 429 means the account's request budget is already spent — and the TUI
+	// fallback spends more of it, because launching `claude` fetches the same
+	// endpoint. Falling back here is what kept the limit pinned indefinitely, so
+	// a rate-limited poll waits instead. A key with nothing to show is the one
+	// exception: one probe there beats an error tile.
+	const pausedMs = rateLimitGate.remainingMs();
+	if (pausedMs > 0) {
+		if (!opts.coldStart || !rateLimitGate.claimColdProbe()) {
+			throw new UsageApiPausedError(pausedMs);
+		}
+		streamDeck.logger.warn("usage API rate limited; spending one TUI probe so this key can show something");
+		// Deliberately a single attempt — the retry further down would launch
+		// `claude` a second time against a budget that is already out.
+		const cold = await probeOnce(await resolveClaudeBinary(), PROBE_WAIT_SECONDS);
+		const usable = pickUsableSnapshot(cold, null);
+		if (usable) return usable;
+		throw new ProbeParseError(
+			"could not extract usage from claude /usage output",
+			cold.rawTextPreview,
 		);
 	}
 

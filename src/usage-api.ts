@@ -27,6 +27,34 @@ export class UsageApiError extends Error {
 	}
 }
 
+// Distinct from a generic failure: a 429 says the account's request budget is
+// spent, so callers must wait rather than reach for another source that spends
+// the same budget.
+export class UsageApiRateLimitError extends UsageApiError {
+	readonly retryAfterMs: number | null;
+
+	constructor(retryAfterMs: number | null) {
+		super("usage API returned HTTP 429 (rate limited)");
+		this.name = "UsageApiRateLimitError";
+		this.retryAfterMs = retryAfterMs;
+	}
+}
+
+/**
+ * Reads the `retry-after` header as milliseconds. The endpoint has been
+ * observed sending `retry-after: 0`, which reads as "retry immediately" and is
+ * no guidance at all, so anything non-positive counts as absent. The RFC also
+ * allows an HTTP-date, which this endpoint does not use — it falls back too.
+ */
+export function parseRetryAfterMs(header: string | null): number | null {
+	if (header === null) return null;
+	const trimmed = header.trim();
+	if (trimmed === "") return null;
+	const seconds = Number(trimmed);
+	if (!Number.isFinite(seconds) || seconds <= 0) return null;
+	return Math.round(seconds * 1000);
+}
+
 type OauthCredentials = {
 	accessToken: string;
 	expiresAt: number | null;
@@ -194,6 +222,9 @@ export async function fetchUsageSnapshot(now: Date = new Date()): Promise<Snapsh
 			},
 			signal: controller.signal,
 		});
+		if (response.status === 429) {
+			throw new UsageApiRateLimitError(parseRetryAfterMs(response.headers.get("retry-after")));
+		}
 		if (!response.ok) {
 			throw new UsageApiError(`usage API returned HTTP ${response.status}`);
 		}

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { parseUsageApiResponse } from "../src/usage-api.ts";
+import { parseRetryAfterMs, parseUsageApiResponse } from "../src/usage-api.ts";
 
 // Real /api/oauth/usage capture from 2026-07-23 (Claude Max, Fable 5 account).
 const FIXTURE = new URL("./fixtures/usage-api-2026-07-23.json", import.meta.url);
@@ -148,4 +148,27 @@ test("parseUsageApiResponse prefers an active scoped limit over inactive ones", 
 	// Assert
 	assert.equal(snapshot.fablePercent, 13);
 	assert.equal(snapshot.fableLabel, "Fable");
+});
+
+test("parseRetryAfterMs converts a seconds header to milliseconds", () => {
+	// Act / Assert
+	assert.equal(parseRetryAfterMs("120"), 120_000);
+	assert.equal(parseRetryAfterMs(" 45 "), 45_000);
+});
+
+test("parseRetryAfterMs treats the endpoint's `retry-after: 0` as no guidance", () => {
+	// The live endpoint answers 429 with `retry-after: 0`, which would otherwise
+	// mean "retry immediately" and defeat the pause entirely.
+
+	// Act / Assert
+	assert.equal(parseRetryAfterMs("0"), null);
+	assert.equal(parseRetryAfterMs("-5"), null);
+});
+
+test("parseRetryAfterMs returns null for a missing or unparsable header", () => {
+	// Act / Assert
+	assert.equal(parseRetryAfterMs(null), null);
+	assert.equal(parseRetryAfterMs(""), null);
+	// An HTTP-date form is valid per RFC but unused here; fall back to the default.
+	assert.equal(parseRetryAfterMs("Tue, 04 Aug 2026 08:00:00 GMT"), null);
 });

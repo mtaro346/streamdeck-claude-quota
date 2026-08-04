@@ -1,3 +1,8 @@
+// `/api/oauth/usage` is rate limited per account (~30 requests an hour) and the
+// budget is shared with the Claude Code CLI and any other usage widget, so the
+// poll interval carries a hard floor rather than a UI-only minimum.
+export const MIN_POLL_SECONDS = 300;
+
 export type Settings = {
 	fontFamily?: string;
 	bgColor?: string;
@@ -57,7 +62,7 @@ export const DEFAULTS: ResolvedSettings = {
 	watermarkColor: "#ffffff",
 	// Strong enough to ghost through the translucent bars.
 	watermarkOpacity: 0.15,
-	pollSeconds: 60,
+	pollSeconds: MIN_POLL_SECONDS,
 };
 
 function num(value: unknown, fallback: number): number {
@@ -91,6 +96,8 @@ export function resolveSettings(input: Settings | undefined | null): ResolvedSet
 		resetColor: str(s.resetColor, str(s.countdownColor, DEFAULTS.resetColor)),
 		watermarkColor: str(s.watermarkColor, DEFAULTS.watermarkColor),
 		watermarkOpacity: num(s.watermarkOpacity, DEFAULTS.watermarkOpacity),
-		pollSeconds: num(s.pollSeconds, DEFAULTS.pollSeconds),
+		// Clamped here so every caller — and any profile saved by an older
+		// version — lands inside the endpoint's budget.
+		pollSeconds: Math.max(MIN_POLL_SECONDS, num(s.pollSeconds, DEFAULTS.pollSeconds)),
 	};
 }

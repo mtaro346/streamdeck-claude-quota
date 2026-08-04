@@ -8,7 +8,7 @@ import {
 	type WillDisappearEvent,
 } from "@elgato/streamdeck";
 
-import { formatCountdown, probe, type Snapshot } from "../probe.js";
+import { formatCountdown, probe, type Snapshot, UsageApiPausedError } from "../probe.js";
 import { resolveSettings, type Settings } from "../settings.js";
 import { buildErrorSvg, buildLoadingSvg, buildSvg, type RenderInput } from "../svg-builder.js";
 
@@ -18,7 +18,9 @@ const SPINNER_STEP_DEG = 18;
 // Multiple keys (one per profile/device) each run their own poll timer. A
 // snapshot fetched by one key moments ago is reused by the others so the
 // rate-limited usage endpoint sees one request per interval, not one per key.
-const SNAPSHOT_FRESH_MS = 45_000;
+// Kept just under the interval so the reuse window closes before the next tick
+// rather than swallowing it.
+const SNAPSHOT_REUSE_RATIO = 0.75;
 
 // Only the usage API provides the Fable window; when a poll falls back to the
 // TUI probe the bar would flicker to "—". Carry the last API-sourced values
@@ -66,13 +68,18 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 		}
 	}
 
+	// resolveSettings already clamps to the endpoint's floor, so this is the one
+	// place the interval is derived and both the timer and the reuse window
+	// stay in step with it.
+	private pollIntervalMs(actionId: string): number {
+		return resolveSettings(this.settings.get(actionId)).pollSeconds * 1000;
+	}
+
 	private armPollTimer(action: WillAppearEvent["action"]): void {
 		this.clearPollTimer(action.id);
-		const resolved = resolveSettings(this.settings.get(action.id));
-		const intervalMs = Math.max(60_000, resolved.pollSeconds * 1000);
 		const timer = setInterval(() => {
 			void this.update(action);
-		}, intervalMs);
+		}, this.pollIntervalMs(action.id));
 		this.pollTimers.set(action.id, timer);
 	}
 
@@ -93,7 +100,7 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 			!opts.force &&
 			this.lastSnapshot &&
 			this.lastUpdatedAt !== null &&
-			Date.now() - this.lastUpdatedAt < SNAPSHOT_FRESH_MS
+			Date.now() - this.lastUpdatedAt < this.pollIntervalMs(action.id) * SNAPSHOT_REUSE_RATIO
 		) {
 			streamDeck.logger.debug("update reused fresh snapshot from another key");
 			await this.render(action, this.lastSnapshot);
@@ -102,7 +109,7 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 		this.inFlight.add(action.id);
 		this.startSpinner(action);
 		try {
-			const snapshot = this.carryFable(await probe());
+			const snapshot = this.carryFable(await probe({ coldStart: this.lastSnapshot === null }));
 			this.lastSnapshot = snapshot;
 			this.lastUpdatedAt = Date.now();
 			this.stopSpinner(action.id);
@@ -113,7 +120,13 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 		} catch (err) {
 			this.stopSpinner(action.id);
 			const message = err instanceof Error ? err.message : String(err);
-			streamDeck.logger.error(`probe failed: ${message}`);
+			// A pause is the designed response to a 429, not a fault — logging it
+			// as an error would bury the real failures in the plugin log.
+			if (err instanceof UsageApiPausedError) {
+				streamDeck.logger.info(message);
+			} else {
+				streamDeck.logger.error(`probe failed: ${message}`);
+			}
 			if (this.lastSnapshot && this.lastSnapshot.sessionPercent !== null) {
 				streamDeck.logger.info("keeping last good snapshot on probe failure");
 				await this.render(action, this.lastSnapshot);
