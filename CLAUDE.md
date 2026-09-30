@@ -12,9 +12,10 @@ Claude Code CLI 本体や CodexBar など、同じエンドポイントを読む
 
 そのため:
 
-- Fable（model-scoped weekly）は**この API からしか取れない**。TUI パース側は `fablePercent: null` 固定。
-  CLI の `/usage` 画面でも per-model は同じ壁に当たり "Per-model breakdown unavailable (rate limited)" になる。
-- 429 を受けたら **TUI フォールバックを走らせてはいけない**。`claude` 起動が枠をさらに消費し、
-  失敗するほどリクエストが増える自己増殖ループになる（2026-08-03〜04 に実際に発生し、4日間 429 が解けなかった）。
+- **`claude` を起動するフォールバックは持たない**（v0.6.0 で削除）。以前は TUI の `/usage` をスクレイプしていたが、
+  起動のたびに枠を消費し、429 時には自己増殖ループになった（2026-08-03〜04 に実際に発生し、4日間 429 が解けなかった）。
+  トークン期限切れ・API 失敗時は直前の表示を残して待つ。
+- Keychain には `Claude Code-credentials` が複数残ることがある（別の USER で動いたセッションの残骸など）。
+  Claude Code 本体と同じ `-a "$USER"` の項目を先に読むこと。アカウント指定なしだと古い項目を掴む（2026-09-30 studio で発生）。
 - ポーリング間隔には `MIN_POLL_SECONDS`（300秒）の下限がある。UI の下限だけでなく `resolveSettings` で
   クランプしているので、古いプロファイルが 60 秒を持っていても枠を割らない。

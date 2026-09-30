@@ -22,11 +22,6 @@ const SPINNER_STEP_DEG = 18;
 // rather than swallowing it.
 const SNAPSHOT_REUSE_RATIO = 0.75;
 
-// Only the usage API provides the Fable window; when a poll falls back to the
-// TUI probe the bar would flicker to "—". Carry the last API-sourced values
-// for a bounded time instead — the weekly window moves slowly.
-const FABLE_CARRY_MS = 15 * 60_000;
-
 @action({ UUID: "com.asuka.claude-quota.5h" })
 export class ClaudeQuotaAction extends SingletonAction<Settings> {
 	private pollTimers = new Map<string, NodeJS.Timeout>();
@@ -36,7 +31,6 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 	private settings = new Map<string, Settings>();
 	private lastSnapshot: Snapshot | null = null;
 	private lastUpdatedAt: number | null = null;
-	private lastFable: { percent: number; resetMinutes: number | null; label: string | null; at: number } | null = null;
 
 	override async onWillAppear(ev: WillAppearEvent<Settings>): Promise<void> {
 		this.settings.set(ev.action.id, ev.payload.settings ?? {});
@@ -109,7 +103,7 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 		this.inFlight.add(action.id);
 		this.startSpinner(action);
 		try {
-			const snapshot = this.carryFable(await probe({ coldStart: this.lastSnapshot === null }));
+			const snapshot = await probe();
 			this.lastSnapshot = snapshot;
 			this.lastUpdatedAt = Date.now();
 			this.stopSpinner(action.id);
@@ -159,34 +153,6 @@ export class ClaudeQuotaAction extends SingletonAction<Settings> {
 			this.spinnerTimers.delete(actionId);
 			this.spinnerAngles.delete(actionId);
 		}
-	}
-
-	private carryFable(snapshot: Snapshot): Snapshot {
-		if (snapshot.fablePercent !== null) {
-			this.lastFable = {
-				percent: snapshot.fablePercent,
-				resetMinutes: snapshot.fableResetMinutes,
-				label: snapshot.fableLabel,
-				at: Date.now(),
-			};
-			return snapshot;
-		}
-		// An API-sourced null is authoritative — the scoped limit is gone
-		// (plan change etc.), so stop carrying instead of showing stale data.
-		if (snapshot.source === "api") {
-			this.lastFable = null;
-			return snapshot;
-		}
-		const carried = this.lastFable;
-		if (!carried || Date.now() - carried.at >= FABLE_CARRY_MS) return snapshot;
-		const elapsedMinutes = Math.round((Date.now() - carried.at) / 60000);
-		return {
-			...snapshot,
-			fablePercent: carried.percent,
-			fableResetMinutes:
-				carried.resetMinutes === null ? null : Math.max(0, carried.resetMinutes - elapsedMinutes),
-			fableLabel: carried.label,
-		};
 	}
 
 	private async render(action: WillAppearEvent["action"], snapshot: Snapshot): Promise<void> {

@@ -10,7 +10,16 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import type { Snapshot } from "./parse.js";
+export type Snapshot = {
+	sessionPercent: number | null;
+	sessionResetMinutes: number | null;
+	weeklyPercent: number | null;
+	weeklyResetMinutes: number | null;
+	// Model-scoped weekly window (e.g. the dedicated Fable bar on Max plans).
+	fablePercent: number | null;
+	fableResetMinutes: number | null;
+	fableLabel: string | null;
+};
 
 const execFileAsync = promisify(execFile);
 
@@ -93,13 +102,18 @@ function isFresh(creds: OauthCredentials | null): creds is OauthCredentials {
 	return creds.expiresAt > Date.now();
 }
 
-async function readKeychainCredentials(): Promise<OauthCredentials | null> {
+// Claude Code files its item under `-a "$USER"` (OS user name as fallback).
+// Several items can share the service name — e.g. one left behind by a session
+// run under a different USER — and an unscoped lookup returns whichever comes
+// first, possibly one nobody refreshes anymore. Ask for Claude Code's first.
+async function readKeychainCredentials(scopeToUser: boolean): Promise<OauthCredentials | null> {
 	try {
+		const account = scopeToUser ? ["-a", process.env.USER || os.userInfo().username] : [];
 		// A locked keychain or a permission dialog can hang the command; a hard
-		// timeout keeps the probe on its way to the TUI fallback instead.
+		// timeout keeps the poll from stalling on it.
 		const { stdout } = await execFileAsync(
 			"/usr/bin/security",
-			["find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
+			["find-generic-password", ...account, "-s", KEYCHAIN_SERVICE, "-w"],
 			{ timeout: 5_000, killSignal: "SIGKILL" },
 		);
 		return extractOauth(stdout.trim());
@@ -117,8 +131,10 @@ function readFileCredentials(): OauthCredentials | null {
 }
 
 async function resolveAccessToken(): Promise<string> {
-	const keychain = await readKeychainCredentials();
-	if (isFresh(keychain)) return keychain.accessToken;
+	const own = await readKeychainCredentials(true);
+	if (isFresh(own)) return own.accessToken;
+	const any = await readKeychainCredentials(false);
+	if (isFresh(any)) return any.accessToken;
 	const file = readFileCredentials();
 	if (isFresh(file)) return file.accessToken;
 	throw new UsageApiError("no fresh OAuth token in Keychain or credentials file");
@@ -188,24 +204,19 @@ export function parseUsageApiResponse(payload: unknown, now: Date = new Date()):
 		weeklyResetMinutes = minutesUntilIso(body.seven_day.resets_at, now);
 	}
 
-	// The action treats a snapshot without a session percent as unusable, so a
-	// session-less payload must fail here and let the TUI fallback take over.
+	// The action treats a snapshot without a session percent as unusable.
 	if (sessionPercent === null) {
 		throw new UsageApiError("usage API payload has no session window");
 	}
 
 	return {
 		sessionPercent,
-		sessionResetText: null,
 		sessionResetMinutes,
 		weeklyPercent,
-		weeklyResetText: null,
 		weeklyResetMinutes,
 		fablePercent,
 		fableResetMinutes,
 		fableLabel,
-		source: "api",
-		rawTextPreview: "usage API",
 	};
 }
 

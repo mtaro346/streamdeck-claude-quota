@@ -65,58 +65,6 @@ test("open() lifts the pause immediately after a successful call", () => {
 	assert.equal(gate.remainingMs(T0), 0);
 });
 
-test("claimColdProbe hands out exactly one probe per pause", () => {
-	// Arrange
-	const gate = new RateLimitGate();
-	gate.close(null, T0);
-
-	// Act / Assert — a key with nothing to show gets one, the next poll does not.
-	assert.equal(gate.claimColdProbe(), true);
-	assert.equal(gate.claimColdProbe(), false);
-	assert.equal(gate.claimColdProbe(), false);
-});
-
-test("a later pause hands out a fresh cold probe", () => {
-	// Arrange — one pause is spent and has since elapsed.
-	const gate = new RateLimitGate();
-	gate.close(null, T0);
-	gate.claimColdProbe();
-
-	// Act — the endpoint rate limits again after the first pause ended.
-	const later = T0 + DEFAULT_BACKOFF_MS + 1;
-	gate.close(null, later);
-
-	// Assert
-	assert.equal(gate.claimColdProbe(), true);
-});
-
-test("extending an active pause does not hand out another cold probe", () => {
-	// Arrange
-	const gate = new RateLimitGate();
-	gate.close(null, T0);
-	gate.claimColdProbe();
-
-	// Act — a second 429 lands while the pause is still running.
-	gate.close(null, T0 + 60_000);
-
-	// Assert — still the same pause, so the allowance stays spent.
-	assert.equal(gate.claimColdProbe(), false);
-});
-
-test("open() restores the cold probe allowance", () => {
-	// Arrange
-	const gate = new RateLimitGate();
-	gate.close(null, T0);
-	gate.claimColdProbe();
-
-	// Act
-	gate.open();
-	gate.close(null, T0 + 1_000);
-
-	// Assert
-	assert.equal(gate.claimColdProbe(), true);
-});
-
 test("a custom default backoff is used when retry-after is absent", () => {
 	// Arrange
 	const gate = new RateLimitGate(120_000);
