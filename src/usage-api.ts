@@ -204,9 +204,14 @@ export function parseUsageApiResponse(payload: unknown, now: Date = new Date()):
 		weeklyResetMinutes = minutesUntilIso(body.seven_day.resets_at, now);
 	}
 
-	// The action treats a snapshot without a session percent as unusable.
+	// While no 5-hour window is running the API omits it entirely (`five_hour:
+	// null`, no `session` limit) — that's 0%, not missing data. Only a payload
+	// with no windows at all is unusable.
 	if (sessionPercent === null) {
-		throw new UsageApiError("usage API payload has no session window");
+		if (weeklyPercent === null) {
+			throw new UsageApiError("usage API payload has no usage windows");
+		}
+		sessionPercent = 0;
 	}
 
 	return {

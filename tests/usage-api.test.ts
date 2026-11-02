@@ -77,13 +77,22 @@ test("parseUsageApiResponse throws on a payload without any usage windows", () =
 	assert.throws(() => parseUsageApiResponse("nope", CAPTURED_AT));
 });
 
-test("parseUsageApiResponse throws when the session window is missing", () => {
-	// Arrange: weekly-only payload — the action can't render without a session
-	// percent, so this must fail over to the TUI probe instead of half-succeeding.
-	const weeklyOnly = { seven_day: payload.seven_day };
+test("parseUsageApiResponse reads an idle (absent) session window as 0%", () => {
+	// Arrange: since 2026-10-31 the API drops the session window entirely
+	// (`five_hour: null`, no `session` limit) while no 5-hour window is running.
+	const idle = {
+		five_hour: null,
+		seven_day: payload.seven_day,
+		limits: [{ kind: "weekly_all", percent: 16, resets_at: "2026-11-05T01:00:00+00:00" }],
+	};
+
+	// Act
+	const snapshot = parseUsageApiResponse(idle, CAPTURED_AT);
 
 	// Assert
-	assert.throws(() => parseUsageApiResponse(weeklyOnly, CAPTURED_AT));
+	assert.equal(snapshot.sessionPercent, 0);
+	assert.equal(snapshot.sessionResetMinutes, null);
+	assert.equal(snapshot.weeklyPercent, 16);
 });
 
 test("parseUsageApiResponse sanitizes a non-string scoped label", () => {
